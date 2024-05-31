@@ -61,7 +61,7 @@ View(data2) #데이터 잘 끌어왔는지 보기
 
 TFdata <- data2 %>%
 str_replace_all ("[^가-힣]", " ") %>% #한글 이외 모든 언어 삭제
-str_squish() %>% #연속된 공백 제거 
+str_squish()  #연속된 공백 제거 
 
 TFdata<-TFdata %>%
 unnest_tokens(input = value, output = word, token = extractNoun) %>%
