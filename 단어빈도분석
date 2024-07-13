@@ -1,0 +1,63 @@
+install.packages("remotes")
+remotes::install_github('haven-jeon/KoNLP',upgrade = "never", INSTALL_opts=c("--no-multiarch"))
+library(KoNLP)
+useNIADic()
+
+# 예시 텍스트
+text <- "안녕하세요. KoNLP 패키지를 사용하여 한글 형태소 분석을 학습하고 있습니다."
+
+# 형태소 분석 및 명사 추출
+nouns <- extractNoun(text)
+print(nouns)
+
+# 필요한 패키지 설치
+install.packages("KoNLP")
+install.packages("xlsx")
+install.packages("stringr")
+install.packages("tm")
+
+setwd("C:/Users/jw9303/Documents/StarWithR/newnew")
+
+# 패키지 불러오기
+library(KoNLP)
+library(xlsx)
+library(stringr)
+library(tm)
+
+# 엑셀 파일에서 데이터 불러오기
+data <- read.xlsx("ababab.xlsx", sheetIndex = 1)
+
+# 데이터 확인
+head(data)
+
+# 한글 문장 추출 (여기서 5열을 사용한다고 가정)
+kor_sentences <- data[, 5]
+
+# KoNLP 패키지 설정
+useNIADic()  # KoNLP 패키지의 내부 사전 사용
+
+# 형태소 분석 및 명사 추출
+kor_nouns <- character(0)  # 빈 벡터로 초기화
+for (sentence in kor_sentences) {
+  nouns <- extractNoun(sentence)
+  # 1글자 명사 제외
+  nouns <- nouns[nchar(nouns) > 1]
+  kor_nouns <- c(kor_nouns, nouns)
+}
+# unlist를 사용하여 리스트를 벡터로 변환
+kor_nouns <- unlist(kor_nouns)
+
+# 전처리된 명사 데이터 확인
+head(kor_nouns)
+
+# 단어 빈도수 계산
+word_freq <- table(kor_nouns)
+
+# 빈도수가 높은 순으로 정렬
+word_freq <- sort(word_freq, decreasing = TRUE)
+
+# 데이터 프레임으로 변환
+word_freq_df <- data.frame(word = names(word_freq), frequency = as.numeric(word_freq))
+
+# 엑셀 파일로 저장
+write.xlsx(word_freq_df, file = "word_frequency.xlsx", row.names = FALSE)
