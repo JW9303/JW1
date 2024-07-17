@@ -1,0 +1,52 @@
+# 필요한 패키지 설치 및 로드
+install.packages(c("readxl", "dplyr", "tidytext", "KoNLP", "writexl", "stringr"))
+library(readxl)
+library(dplyr)
+library(tidytext)
+library(KoNLP)
+library(writexl)
+library(stringr)
+
+# KoNLP 사전 설정
+useNIADic()
+
+# 데이터 로드
+data <- read_excel("C:/Users/jw9303/Documents/StarWithR/newnew/aa.xlsx")
+
+# 텍스트 전처리 함수
+preprocess_text <- function(text) {
+  nouns <- extractNoun(text)
+  nouns <- nouns[nchar(nouns) > 1]
+  nouns <- nouns[!grepl("[^가-힣]", nouns)]
+  return(paste(nouns, collapse = " "))
+}
+
+# 텍스트 전처리
+data$processed_text <- sapply(data$summary, preprocess_text)  # 실제 텍스트 열 이름으로 변경해주세요
+
+# 단어 빈도수 계산
+word_freq <- data %>%
+  unnest_tokens(word, processed_text) %>%
+  count(word, sort = TRUE)
+
+# 상위 100개 단어 추출 (빈도수)
+top_100_freq <- head(word_freq, 100)
+
+# TF-IDF 계산
+tfidf <- data %>%
+  unnest_tokens(word, processed_text) %>%
+  count(summary, word) %>%  # 실제 텍스트 열 이름으로 변경해주세요
+  bind_tf_idf(word, summary, n)  # 실제 텍스트 열 이름으로 변경해주세요
+
+# 상위 50개 단어 추출 (TF-IDF)
+top_100_tfidf <- tfidf %>%
+  group_by(word) %>%
+  summarize(avg_tfidf = mean(tf_idf)) %>%
+  arrange(desc(avg_tfidf)) %>%
+  head(100)
+
+# 결과를 엑셀 파일로 저장
+result_list <- list("Top 100 Frequency" = top_100_freq, "Top 100 TF-IDF" = top_100_tfidf)
+write_xlsx(result_list, "C:/Users/jw9303/Documents/StarWithR/newnew/result.xlsx")
+
+print("작업이 완료되었습니다. 결과가 'result.xlsx' 파일로 저장되었습니다.")
